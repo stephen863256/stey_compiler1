@@ -30,6 +30,9 @@ class IRBuilder {
     IBinaryInst *create_isdiv(Value *lhs, Value *rhs) {
         return IBinaryInst::create_sdiv(lhs, rhs, this->BB_);
     }
+    IBinaryInst *create_isrem(Value *lhs, Value *rhs) {
+        return IBinaryInst::create_srem(lhs, rhs, this->BB_);
+    }
 
     ICmpInst *create_icmp_eq(Value *lhs, Value *rhs) {
         return ICmpInst::create_eq(lhs, rhs, this->BB_);

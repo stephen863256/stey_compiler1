@@ -1,11 +1,11 @@
 add_executable(
-    cminusfc
-    cminusfc.cpp
-    cminusf_builder.cpp
+    SysY
+    SysY.cpp
+    SysY_builder.cpp
 )
 
 target_link_libraries(
-    cminusfc
+    SysY
     IR_lib
     common
     syntax
@@ -15,6 +15,6 @@ target_link_libraries(
 )
 
 install(
-    TARGETS cminusfc
+    TARGETS SysY
     RUNTIME DESTINATION bin
 )

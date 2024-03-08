@@ -6,6 +6,7 @@
 
 #include "syntax_tree.h"
 
+#define YYDEBUG 1
 // external functions from lex
 extern int yylex();
 extern int yyparse();
@@ -25,7 +26,7 @@ syntax_tree *gt;
 void yyerror(const char *s);
 
 // Helper functions written for you with love
-syntax_tree_node *node(const char *node_name, int children_num, ...);
+syntax_tree_node *node(const char *node_name,int children_num, ...);
 %}
 
 
@@ -34,27 +35,27 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 }
 
 
-%token <node> ERROR 
-%token <node> ADD SUB MUL DIV MOD
-%token <node> LT GT LE GE EQ NEQ
-%token <node> ASSIGN SEMICOLON COMMA LPARENTHESIS RPARENTHESIS LBRACE RBRACE
-%token <node> INT FLOAT VOID CONST
-%token <node> IF ELSE WHILE CONTINUE BREAK RETURN
-%token <node> AND OR NOT
-%token <node> ID INTEGER_10 INTEGER_8 INTEGER_16 FLOATPOINT_10 FLOATPOINT_16 INTEGER FLOATPOINT
+%token<node> ERROR 
+%token<node> ADD SUB MUL DIV MOD
+%token<node> LT GT LE GE EQ NEQ
+%token<node> ASSIGN SEMICOLON COMMA LPARENTHESIS RPARENTHESIS LBRACE RBRACE LBRACKET RBRACKET
+%token<node> INT FLOAT VOID CONST
+%token<node> IF ELSE WHILE CONTINUE BREAK RETURN
+%token<node> AND OR NOT
+%token<node> ID INTEGER_10 INTEGER_8 INTEGER_16 FLOATPOINT_10 FLOATPOINT_16 
 
-%type <node> CompUnit Decl ConstDecl ConstDefList ConstDef ConstInitVal VarDecl VarDef InitValArray FuncDef FuncFParams FuncFParam Block BlockItem
-%type <node> Stmt Exp Cond LVal PrimaryExp Number UnaryExp FuncRParams MulExp AddExp RelExp EqExp LAndExp LOrExp ConstExp
-%type <node> UnaryOp
-%type <node> BType FuncType
-%type <node> ConstArrayIdent
-%type <node> ConstInitValArrayList  
-%type <node> InitValArrayList
-%type <node>  FuncArrayIdent        
-%type <node> BlockItemList          
-%type <node> ArrayIdent             
-%type <node> empty
-
+%type<node> CompUnit Decl ConstDecl ConstDefList ConstDef ConstInitVal VarDecl VarDefList VarDef InitVal FuncDef FuncFParams FuncFParam Block BlockItem
+%type<node> Stmt Exp Cond LVal PrimaryExp Number UnaryExp FuncRParams MulExp AddExp RelExp EqExp LAndExp LOrExp ConstExp
+%type<node> UnaryOp
+%type<node> BType FuncType
+%type<node> ConstArrayIdent
+%type<node> ConstInitValArrayList  
+%type<node> InitValArrayList
+%type<node> FuncArrayIdent        
+%type<node> BlockItemList          
+%type<node> ArrayIdent             
+%type<node> INTEGER FLOATPOINT
+%type<node> empty
 
 %start CompUnit
 %left ASSIGN
@@ -65,13 +66,14 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %left NOT
 
 %%
+
 CompUnit : Decl { $$ = node("CompUnit", 1, $1);gt->root = $$;}
-         | CompUnit Decl { $$ = node("CompUnit", 2, $1, $2); }
+         | CompUnit Decl { $$ = node("CompUnit",2, $1, $2);gt->root = $$;}
          ;
 
-Decl : ConstDecl { $$ = node("Decl", 1, $1); }
+Decl : FuncDef { $$ = node("Decl", 1, $1); }
+        | ConstDecl { $$ = node("Decl", 1, $1); }
         | VarDecl { $$ = node("Decl", 1, $1); }
-        | FuncDef { $$ = node("Decl", 1, $1); }
         ;
 
 ConstDecl : CONST BType ConstDefList SEMICOLON { $$ = node("ConstDecl", 4,$1, $2, $3, $4); }
@@ -100,42 +102,45 @@ ConstInitValArrayList : ConstInitValArrayList COMMA ConstInitVal { $$ = node("Co
 
 VarDecl : BType VarDefList SEMICOLON { $$ = node("VarDecl", 3, $1, $2, $3); }
         ;
+
 VarDefList : VarDefList COMMA VarDef { $$ = node("VarDefList", 3, $1, $2, $3); }
         | VarDef { $$ = node("VarDefList", 1, $1); }
         ;
 
 VarDef : ID { $$ = node("VarDef", 1, $1); }
-         ID ConstArrayIdent { $$ = node("VarDef", 2, $1,$2); }
-        | ID ASSIGN InitVal { $$ = node("VarDef", 3, $1, $2, $3); }
+        | ID ConstArrayIdent { $$ = node("VarDef", 2, $1,$2); }
+        | ID ASSIGN Exp { $$ = node("VarDef", 3, $1, $2, $3); }
         | ID ConstArrayIdent ASSIGN InitVal { $$ = node("VarDef", 4, $1, $2, $3, $4); }
         ;
-ConstArrayIdent : empty { $$ = node("ConstArrayIdent", 0); }
-        | ConstArrayIdent LBRACKET constExp RBRACKET { $$ = node("ConstArrayIdent", 4, $1, $2, $3, $4); }
+
+ConstArrayIdent : LBRACKET ConstExp RBRACKET { $$ = node("ConstArrayIdent", 3,$1,$2,$3); }
+        | ConstArrayIdent LBRACKET ConstExp RBRACKET { $$ = node("ConstArrayIdent", 4, $1, $2, $3, $4); }
         ;
-InitVal : Exp { $$ = node("InitVal", 1, $1); }
+InitVal :  Exp { $$ = node("InitVal", 1, $1); }
         | LBRACE InitValArrayList RBRACE { $$ = node("InitVal", 3, $1, $2, $3); }
         | LBRACE RBRACE { $$ = node("InitVal", 2, $1, $2); }
         ;
 
 InitValArrayList : InitValArrayList COMMA InitVal { $$ = node("InitValArrayList", 3, $1, $2, $3); }
-| InitVal { $$ = node("InitValArrayList",$1);}
-
-
-FuncDef :   FuncType ID LPARENTHESIS FuncFParams RPARENTHESIS Block { $$ = node("FuncDef", 6, $1, $2, $3, $4, $5, $6); }
-        |   FuncType ID LPARENTHESIS RPARENTHESIS Block { $$ = node("FuncDef", 5, $1, $2, $3, $4, $5); }
+        | InitVal { $$ = node("InitValArrayList",1,$1);}
         ;
 
-FuncType :  INT { $$ = node("FuncType", 1, $1); }
-        |  FLOAT { $$ = node("FuncType", 1, $1); }
-        |   VOID { $$ = node("FuncType", 1, $1); }
+FuncDef :   BType ID LPARENTHESIS FuncFParams RPARENTHESIS Block { $$ = node("FuncDef", 6, $1, $2, $3, $4, $5, $6); }
+        |   BType ID LPARENTHESIS RPARENTHESIS Block { $$ = node("FuncDef", 5, $1, $2, $3, $4, $5); }
+        |   VOID ID LPARENTHESIS FuncFParams RPARENTHESIS Block { $$ = node("FuncDef", 6, $1, $2, $3, $4, $5, $6); }
+        |   VOID ID LPARENTHESIS RPARENTHESIS Block { $$ = node("FuncDef", 5, $1, $2, $3, $4, $5); }
         ;
+
+//FuncType :  BType{ $$ = node("FuncType", 1, $1); }
+  //      |   VOID { $$ = node("FuncType", 1, $1); }
+    //    ;
 
 FuncFParams :   FuncFParams COMMA FuncFParam { $$ = node("FuncFParams", 3, $1, $2, $3); }
         |   FuncFParam { $$ = node("FuncFParams", 1, $1); }
         ;
 
-FuncFParam :    BType ID { $$ = node("FuncFParam", 2, $1, $2); }
-        |   BType ID LBRACKET RBRACKET FuncArrayIdent { $$ = node("FuncFParam", 2, $1, $2); }
+FuncFParam :   BType ID { $$ = node("FuncFParam", 2, $1, $2); }
+        |   BType ID LBRACKET RBRACKET FuncArrayIdent { $$ = node("FuncFParam", 5, $1, $2,$3,$4,$5); }
         ;
 
 FuncArrayIdent :  FuncArrayIdent LBRACKET Exp RBRACKET { $$ = node("FuncArrayIdent", 4, $1, $2, $3, $4); } 
@@ -156,6 +161,7 @@ BlockItem : Stmt { $$ = node("BlockItem", 1, $1); }
         ;
 
 Stmt : LVal ASSIGN Exp SEMICOLON { $$ = node("Stmt", 4, $1, $2, $3, $4); }
+        | SEMICOLON { $$ = node("Stmt", 1, $1);}
         | Exp SEMICOLON { $$ = node("Stmt", 2, $1, $2); }
         | Block { $$ = node("Stmt", 1, $1); }
         | IF LPARENTHESIS Cond RPARENTHESIS Stmt { $$ = node("Stmt", 5, $1, $2, $3, $4, $5); }
@@ -178,7 +184,7 @@ LVal : ID { $$ = node("LVal", 1, $1); }
         ;
 
 ArrayIdent: ArrayIdent LBRACKET Exp RBRACKET { $$ = node("ArrayIdent", 4, $1, $2, $3, $4); }
-        |empty { $$ = node("ArrayIdent", 0); }
+        | LBRACKET Exp RBRACKET { $$ = node("ArrayIdent", 3, $1, $2, $3); }
         ;
 
 PrimaryExp : LPARENTHESIS Exp RPARENTHESIS { $$ = node("PrimaryExp", 3, $1, $2, $3); }
@@ -189,12 +195,12 @@ Number :  INTEGER { $$ = node("Number", 1, $1); }
         | FLOATPOINT { $$ = node("Number", 1, $1); }
         ;
 
-INTEGER   INTEGER_10 { $$ = node("Integer", 1, $1); }
+INTEGER :  INTEGER_10 { $$ = node("Integer", 1, $1); }
         | INTEGER_8 { $$ = node("Integer", 1, $1); }
         | INTEGER_16 { $$ = node("Integer", 1, $1); }
         ;
-FLOATPOINT:        FLOATPOINT_10 { $$ = node("FloatPoint", 1, $1); }
-        | FLOATPOINT_16 { $$ = node("FLoatPoint", 1, $1); }
+FLOATPOINT: FLOATPOINT_10 { $$ = node("FloatPoint", 1, $1); }
+        | FLOATPOINT_16 { $$ = node("FloatPoint", 1, $1); }
         ;
 
 UnaryExp : PrimaryExp { $$ = node("UnaryExp", 1, $1); }
@@ -239,11 +245,12 @@ LAndExp : EqExp { $$ = node("LAndExp", 1, $1); }
         ;
 
 LOrExp : LAndExp { $$ = node("LOrExp", 1, $1); }
-        | LOrExp OR LAndExp { $$ = node("LOrExp", 3, $1, $2, $3); }
+        | LOrExp OR LAndExp { $$ = node("LOrExp",3, $1, $2, $3); }
         ;
 
 ConstExp : AddExp { $$ = node("ConstExp", 1, $1); }
         ;
+
 empty : {}
 ;
 %%
@@ -251,8 +258,6 @@ empty : {}
 /// The error reporting function.
 void yyerror(const char * s)
 {
-    // TO STUDENTS: This is just an example.
-    // You can customize it as you like.
     fprintf(stderr, "error at line %d column %d: %s\n", lines, pos_start, s);
 }
 
@@ -262,6 +267,7 @@ void yyerror(const char * s)
 /// This function initializes essential states before running yyparse().
 syntax_tree *parse(const char *input_path)
 {
+
     if (input_path != NULL) {
         if (!(yyin = fopen(input_path, "r"))) {
             fprintf(stderr, "[ERR] Open input file %s failed.\n", input_path);
@@ -271,6 +277,7 @@ syntax_tree *parse(const char *input_path)
         yyin = stdin;
     }
 
+   // std::cout << "Parsing..." << std::endl;
     lines = pos_start = pos_end = 1;
     gt = new_syntax_tree();
     yyrestart(yyin);
@@ -283,10 +290,10 @@ syntax_tree *parse(const char *input_path)
 /// e.g. $$ = node("program", 1, $1);
 syntax_tree_node *node(const char *name, int children_num, ...)
 {
-    syntax_tree_node *p = new_syntax_tree_node(name);
+    syntax_tree_node *p = new_syntax_tree_node(name,lines);
     syntax_tree_node *child;
     if (children_num == 0) {
-        child = new_syntax_tree_node("epsilon");
+        child = new_syntax_tree_node("epsilon",lines);
         syntax_tree_add_child(p, child);
     } else {
         va_list ap;

@@ -1,6 +1,6 @@
-add_library(cminus_io io.c)
+add_library(SysY_io sylib.c)
 
 install(
-    TARGETS cminus_io
+    TARGETS SysY_io
     ARCHIVE DESTINATION lib
 )

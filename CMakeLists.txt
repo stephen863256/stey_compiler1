@@ -36,7 +36,7 @@ llvm_map_components_to_libnames(
 
 INCLUDE_DIRECTORIES(
     include
-    include/cminusfc
+    include/SysY
     include/common
     include/lightir
     include/codegen
@@ -53,4 +53,4 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_BINARY_DIR})
 add_subdirectory(src)
-add_subdirectory(tests)
+

@@ -3,7 +3,7 @@
 #include "Mem2Reg.hpp"
 #include "Module.hpp"
 #include "PassManager.hpp"
-#include "cminusf_builder.hpp"
+#include "SysY_builder.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -45,7 +45,8 @@ int main(int argc, char **argv) {
     {
         auto syntax_tree = parse(config.input_file.c_str());
         auto ast = AST(syntax_tree);
-        CminusfBuilder builder;
+        //CminusfBuilder builder;
+        SysYBuilder builder;
         ast.run_visitor(builder);
         m = builder.getModule();
     }
@@ -61,7 +62,7 @@ int main(int argc, char **argv) {
     std::ofstream output_stream(config.output_file);
     if (config.emitllvm) {
         auto abs_path = std::filesystem::canonical(config.input_file);
-        output_stream << "; ModuleID = 'cminus'\n";
+        output_stream << "; ModuleID = 'SysY'\n";
         output_stream << "source_filename = " << abs_path << "\n\n";
         output_stream << m->print();
     } else if (config.emitasm) {
@@ -107,7 +108,7 @@ void Config::check() {
     if (input_file.empty()) {
         print_err("no input file");
     }
-    if (input_file.extension() != ".cminus") {
+    if (input_file.extension() != ".sy") {
         print_err("file format not recognized");
     }
     if (emitllvm and emitasm) {

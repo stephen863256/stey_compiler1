@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BasicBlock.hpp"
+#include "Function.hpp"
 #include "PassManager.hpp"
 
 #include <map>
@@ -28,7 +29,12 @@ class Dominators : public Pass {
     void create_dom_tree_succ(Function *f);
 
     // TODO 补充需要的函数
+    void create_reverse_post_order(Function *f);
+    void post_order_visit(BasicBlock *bb,std::set<BasicBlock *> &visited);
+    BasicBlock *intersect(BasicBlock *bb1,BasicBlock *bb2);
 
+    std::list<BasicBlock *> reverse_post_order_{};
+    std::map<BasicBlock *, int> post_order_id_{};
     std::map<BasicBlock *, BasicBlock *> idom_{};  // 直接支配
     std::map<BasicBlock *, BBSet> dom_frontier_{}; // 支配边界集合
     std::map<BasicBlock *, BBSet> dom_tree_succ_blocks_{}; // 支配树中的后继节点

@@ -1,8 +1,9 @@
 #include "syntax_tree.h"
 extern syntax_tree *parse(const char*);
-
+extern int yydebug;
 int main(int argc, char *argv[])
 {
+    yydebug = 1;
     syntax_tree *tree = NULL;
     const char *input = NULL;
 
@@ -14,6 +15,7 @@ int main(int argc, char *argv[])
     }
 
     // Call the syntax analyzer.
+    printf("Parsing %s\n", input);
     tree = parse(input);
     print_syntax_tree(stdout, tree);
     del_syntax_tree(tree);

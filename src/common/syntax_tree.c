@@ -3,7 +3,7 @@
 
 #include "syntax_tree.h"
 
-syntax_tree_node * new_syntax_tree_node(const char * name)
+syntax_tree_node * new_syntax_tree_node(const char * name,int lineno)
 {
 	syntax_tree_node * new_node = (syntax_tree_node *)malloc(sizeof(syntax_tree_node));
 	if (name)
@@ -11,6 +11,7 @@ syntax_tree_node * new_syntax_tree_node(const char * name)
 	else
 		new_node->name[0] = '\0';
 	new_node->children_num = 0;
+	new_node->lineno = lineno;
 	return new_node;
 }
 

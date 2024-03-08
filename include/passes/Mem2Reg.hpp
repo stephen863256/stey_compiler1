@@ -6,14 +6,15 @@
 
 #include <map>
 #include <memory>
+#include <vector>
 
 class Mem2Reg : public Pass {
   private:
     Function *func_;
     std::unique_ptr<Dominators> dominators_;
 
-    // TODO 添加需要的变量
-
+    std::map<PhiInst *, Value *> phi2val;
+    
   public:
     Mem2Reg(Module *m) : Pass(m) {}
     ~Mem2Reg() = default;

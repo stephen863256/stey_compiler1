@@ -44,6 +44,9 @@ IBinaryInst *IBinaryInst::create_mul(Value *v1, Value *v2, BasicBlock *bb) {
 IBinaryInst *IBinaryInst::create_sdiv(Value *v1, Value *v2, BasicBlock *bb) {
     return create(sdiv, v1, v2, bb);
 }
+IBinaryInst *IBinaryInst::create_srem(Value *v1, Value *v2, BasicBlock *bb) {
+    return create(srem, v1, v2, bb);
+}
 
 FBinaryInst::FBinaryInst(OpID id, Value *v1, Value *v2, BasicBlock *bb)
     : BaseInst<FBinaryInst>(bb->get_module()->get_float_type(), id, bb) {

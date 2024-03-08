@@ -37,6 +37,8 @@ std::string print_instr_op_name(Instruction::OpID id) {
         return "mul";
     case Instruction::sdiv:
         return "sdiv";
+    case Instruction::srem:
+        return "srem";
     case Instruction::fadd:
         return "fadd";
     case Instruction::fsub:
